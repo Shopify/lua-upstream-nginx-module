@@ -12,6 +12,8 @@ Table of Contents
 * [Functions](#functions)
     * [get_upstreams](#get_upstreams)
     * [get_servers](#get_servers)
+    * [add_server_to_upstream](#add_server_to_upstream)
+    * [remove_server_from_upstream](#remove_server_from_upstream)
     * [get_primary_peers](#get_primary_peers)
     * [get_backup_peers](#get_backup_peers)
     * [set_peer_down](#set_peer_down)
@@ -123,6 +125,34 @@ The return value is an array-like Lua table. Each table entry is a hash-like Lua
 * max_fails
 * name
 * weight
+
+[Back to TOC](#table-of-contents)
+
+add_server_to_upstream
+-----------
+`syntax: err = upstream.add_server_to_upstream(upstream_name, server)`
+
+Add a server to a given upstream. The server should be a hash-like Lua table and may contain the following keys (bolded keys are required):
+
+* **name**
+* **addr**
+    socket address(es). can be either a Lua string or an array-like Lua table of Lua strings.
+* backup
+* fail_timeout
+* max_fails
+* weight
+
+The return value is an error string or nil.
+
+[Back to TOC](#table-of-contents)
+
+remove_server_from_upstream
+-----------
+`syntax: err = upstream.remove_server_from_upstream(upstream_name, server_name)`
+
+Removes a server from an upstream given the upstream and server names. The server name is expected to match the `name` field on the server in the upstream.
+
+The return value is an error string or nil.
 
 [Back to TOC](#table-of-contents)
 
@@ -329,4 +359,3 @@ See Also
 * the [lua-resty-upstream-healthcheck](https://github.com/openresty/lua-resty-upstream-healthcheck) library which makes use of the Lua API provided by this module.
 
 [Back to TOC](#table-of-contents)
-
