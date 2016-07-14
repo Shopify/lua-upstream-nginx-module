@@ -1,0 +1,14 @@
+#!/bin/bash
+
+sudo apt-get install -qq -y \
+  axel \
+  build-essential \
+  cpanminus \
+  git-core \
+  libtest-base-perl \
+  libtext-diff-perl \
+  liburi-perl \
+  libwww-perl \
+  libtest-longstring-perl \
+  liblist-moreutils-perl\
+  > build.log 2>&1 || (cat build.log && exit 1)

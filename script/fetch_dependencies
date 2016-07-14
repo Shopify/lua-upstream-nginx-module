@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [ ! -d download-cache ]; then mkdir download-cache; fi
+if [ ! -f download-cache/ngx_http_redis-0.3.7.tar.gz ]; then wget -O download-cache/ngx_http_redis-0.3.7.tar.gz http://people.freebsd.org/~osa/ngx_http_redis-0.3.7.tar.gz; fi
+mkdir -p ~/work/nginx && tar -xf download-cache/ngx_http_redis-0.3.7.tar.gz -C ~/work/nginx
+
+cd ~/work/nginx
+
+git clone https://github.com/openresty/nginx-devel-utils.git || true
+git clone https://github.com/openresty/openresty.git ../openresty || true
+git clone https://github.com/openresty/no-pool-nginx.git ../no-pool-nginx || true
+git clone https://github.com/simpl/ngx_devel_kit.git ../ndk-nginx-module || true
+git clone https://github.com/openresty/test-nginx.git || true
+git clone https://github.com/openresty/lua-nginx-module.git ../lua-nginx-module || true
+git clone https://github.com/openresty/nginx-eval-module.git ../eval-nginx-module || true
+git clone https://github.com/openresty/echo-nginx-module.git ../echo-nginx-module || true
+git clone https://github.com/openresty/set-misc-nginx-module.git ../set-misc-nginx-module || true
+git clone https://github.com/openresty/openresty.git ../ngx_openresty || true

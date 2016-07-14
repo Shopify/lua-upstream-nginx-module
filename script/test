@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cd test-nginx && sudo cpanm . && cd ..
+
+export PATH=$PWD/work/nginx/sbin:$PWD/nginx-devel-utils:$PATH
+export NGX_BUILD_CC=$CC
+
+cd ~/work/nginx/lua-upstream-nginx-module
+
+sh util/build.sh $NGINX_VERSION > build.log 2>&1 || (cat build.log && exit 1)
+nginx -V
+ldd `which nginx`|grep luajit
+prove -r t
