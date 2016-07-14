@@ -94,6 +94,9 @@ ngx_http_lua_upstream_create_module(lua_State * L)
     lua_pushcfunction(L, ngx_http_lua_upstream_get_servers);
     lua_setfield(L, -2, "get_servers");
 
+    lua_pushcfunction(L, ngx_http_lua_upstream_add_server_to_upstream);
+    lua_setfield(L, -2, "add_server_to_upstream");
+
     lua_pushcfunction(L, ngx_http_lua_upstream_get_primary_peers);
     lua_setfield(L, -2, "get_primary_peers");
 
