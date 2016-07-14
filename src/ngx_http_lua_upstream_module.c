@@ -23,6 +23,7 @@ static ngx_int_t ngx_http_lua_upstream_init(ngx_conf_t *cf);
 static int ngx_http_lua_upstream_create_module(lua_State * L);
 static int ngx_http_lua_upstream_get_upstreams(lua_State * L);
 static int ngx_http_lua_upstream_get_servers(lua_State * L);
+static int ngx_http_lua_upstream_add_server_to_upstream(lua_State * L);
 static ngx_http_upstream_main_conf_t *
     ngx_http_lua_upstream_get_upstream_main_conf(lua_State *L);
 static int ngx_http_lua_upstream_get_primary_peers(lua_State * L);
@@ -31,10 +32,13 @@ static int ngx_http_lua_get_peer(lua_State *L,
     ngx_http_upstream_rr_peer_t *peer, ngx_uint_t id);
 static ngx_http_upstream_srv_conf_t *
     ngx_http_lua_upstream_find_upstream(lua_State *L, ngx_str_t *host);
+static ngx_http_upstream_server_t*
+    ngx_http_lua_upstream_find_server(ngx_http_upstream_srv_conf_t * us, ngx_url_t u);
 static ngx_http_upstream_rr_peer_t *
     ngx_http_lua_upstream_lookup_peer(lua_State *L);
 static int ngx_http_lua_upstream_set_peer_down(lua_State * L);
 static int ngx_http_lua_upstream_current_upstream_name(lua_State *L);
+
 
 
 static ngx_http_module_t ngx_http_lua_upstream_ctx = {
@@ -141,6 +145,92 @@ ngx_http_lua_upstream_get_upstreams(lua_State * L)
     return 1;
 }
 
+static int
+ngx_http_lua_upstream_add_server_to_upstream(lua_State * L)
+{
+    ngx_str_t                    host;
+    ngx_http_upstream_server_t   *us;
+    ngx_http_upstream_srv_conf_t *uscf;
+    ngx_url_t                    u;
+    ngx_http_request_t           *r;
+    ngx_int_t                    weight, max_fails;
+    ngx_uint_t                   backup;
+    time_t                       fail_timeout;
+    u_char                       *p;
+
+    if (lua_gettop(L) != 6) {
+        /*
+        * "upstream name", "host:port", "weight", "max_fails", "fail_timeout", "backup"
+        */
+        return luaL_error(L, "exactly 6 arguments expected");
+    }
+
+    r = ngx_http_lua_get_request(L);
+    if (r == NULL) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "get request error \n");
+        return 2;
+    }
+
+    host.data = (u_char *) luaL_checklstring(L, 1, &host.len);
+
+    ngx_memzero(&u, sizeof(ngx_url_t));
+    p = (u_char *) luaL_checklstring(L, 2, &u.url.len);
+    u.default_port = 80;
+
+    weight = (ngx_int_t) luaL_checkint(L, 3);
+    max_fails = (ngx_int_t) luaL_checkint(L, 4);
+    fail_timeout = (time_t) luaL_checklong(L, 5);
+    backup = lua_toboolean(L, 6);
+#if (NGX_DEBUG)
+    ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "%s %s params: %s,%s,%d,%d,%d\n", __FILE__, __FUNCTION__, host.data, p, weight, max_fails, fail_timeout);
+#endif
+
+    uscf = ngx_http_lua_upstream_find_upstream(L, &host);
+    if (uscf == NULL) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "upstream not found\n");
+        return 2;
+    }
+
+    u.url.data = ngx_pcalloc(uscf->servers->pool, u.url.len+1);
+    ngx_memcpy(u.url.data, p, u.url.len);
+
+    if (ngx_http_lua_upstream_find_server(uscf, u) != NULL) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "server already exists\n");
+        return 2;
+    } else {
+        // validate URL
+        if (ngx_parse_url(uscf->servers->pool, &u) != NGX_OK) {
+            if (u.err) {
+                lua_pushnil(L);
+                lua_pushliteral(L, "url parser error\n");
+                return 2;
+            }
+        }
+
+        us = ngx_array_push(uscf->servers);
+        if (us == NULL) {
+            lua_pushnil(L);
+            lua_pushliteral(L, "could not append server to upstream\n");
+            return 2;
+        }
+
+        ngx_memzero(us, sizeof(ngx_http_upstream_server_t));
+
+        us->name = u.url;
+        us->addrs = u.addrs;
+        us->naddrs = u.naddrs;
+        us->weight = weight;
+        us->max_fails = max_fails;
+        us->fail_timeout = fail_timeout;
+        us->backup = backup;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
 
 static int
 ngx_http_lua_upstream_get_servers(lua_State * L)
@@ -551,6 +641,32 @@ ngx_http_lua_upstream_find_upstream(lua_State *L, ngx_str_t *host)
     return NULL;
 }
 
+static ngx_http_upstream_server_t*
+ngx_http_lua_upstream_find_server(ngx_http_upstream_srv_conf_t * us, ngx_url_t u)
+{
+    ngx_uint_t                 i, j;
+    size_t                     len;
+    ngx_http_upstream_server_t *server = NULL;
+
+    if (us->servers == NULL || us->servers->nelts == 0) {
+        return NULL;
+    }
+
+    server = us->servers->elts;
+
+    for (i = 0; i < us->servers->nelts; ++i) {
+        for (j = 0; j < server[i].naddrs; ++j) {
+            len = server[i].addrs[j].name.len;
+
+            if (len == u.url.len
+                  && ngx_memcmp(u.url.data, server[i].addrs[j].name.data, u.url.len) == 0) {
+                      return &server[i];
+            }
+        }
+    }
+
+    return NULL;
+}
 
 static int
 ngx_http_lua_upstream_current_upstream_name(lua_State *L)

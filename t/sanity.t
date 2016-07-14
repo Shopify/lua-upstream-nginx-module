@@ -648,3 +648,52 @@ nil
 --- no_error_log
 [error]
 
+
+=== TEST 19: add server to pre-defined upstream
+--- http_config
+    upstream foo {
+    }
+
+--- config
+    location /t {
+        content_by_lua '
+            local upstream = require "ngx.upstream"
+            local err = upstream.add_server_to_upstream("foo", { name = "127.0.0.1:8080", addr = "127.0.0.1:8080" })
+            if err then
+              ngx.say(err)
+            else
+              local srvs, err = get_servers("foo")
+              if not srvs then
+                  ngx.say("failed to get servers in upstream foo")
+              else
+                ngx.say("upstream foo:")
+                for _, srv in ipairs(srvs) do
+                  local first = true
+                  for k, v in pairs(srv) do
+                    if first then
+                      first = false
+                      ngx.print("    ")
+                    else
+                      ngx.print(", ")
+                    end
+                    if type(v) == "table" then
+                      ngx.print(k, " = {", concat(v, ", "), "}")
+                    else
+                      ngx.print(k, " = ", v)
+                    end
+                  end
+                  ngx.print("\\n")
+                end
+              end
+              ngs.say("done")
+            end
+        ';
+    }
+--- request
+    GET /t
+--- response_body
+foo:
+    addr = 127.0.0.1:8080, name = 127.0.0.1:8080
+done
+--- no_error_log
+[error]

@@ -130,19 +130,9 @@ The return value is an array-like Lua table. Each table entry is a hash-like Lua
 
 add_server_to_upstream
 -----------
-`syntax: err = upstream.add_server_to_upstream(upstream_name, server)`
+`syntax: ok, err = upstream.add_server(upstream_name, ip:port, weight, max_fails, fail_timeout)`
 
-Add a server to a given upstream. The server should be a hash-like Lua table and may contain the following keys (bolded keys are required):
-
-* **name**
-* **addr**
-    socket address(es). can be either a Lua string or an array-like Lua table of Lua strings.
-* backup
-* fail_timeout
-* max_fails
-* weight
-
-The return value is an error string or nil.
+The return values are a boolean denoting the success of the operation and an associated error if one occurs.
 
 [Back to TOC](#table-of-contents)
 
