@@ -652,6 +652,7 @@ nil
 === TEST 19: add server to pre-defined upstream
 --- http_config
     upstream foo {
+      server 127.0.0.2;
     }
 
 --- config
@@ -693,6 +694,7 @@ nil
     GET /t
 --- response_body
 foo:
+    addr = 127.0.0.2, name = 127.0.0.2
     addr = 127.0.0.1:8080, name = 127.0.0.1:8080
 done
 --- no_error_log
