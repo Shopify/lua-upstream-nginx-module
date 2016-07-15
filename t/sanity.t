@@ -686,7 +686,7 @@ nil
                   ngx.print("\\n")
                 end
               end
-              ngs.say("done")
+              ngx.say("done")
             end
         ';
     }
