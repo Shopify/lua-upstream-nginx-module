@@ -649,6 +649,7 @@ nil
 [error]
 
 
+
 === TEST 19: add server to pre-defined upstream
 --- http_config
     upstream foo {
