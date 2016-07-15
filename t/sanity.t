@@ -663,7 +663,7 @@ nil
             if err then
               ngx.say(err)
             else
-              local srvs, err = get_servers("foo")
+              local srvs, err = upstream.get_servers("foo")
               if not srvs then
                   ngx.say("failed to get servers in upstream foo")
               else
