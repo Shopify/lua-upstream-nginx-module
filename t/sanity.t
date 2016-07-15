@@ -661,7 +661,7 @@ nil
         content_by_lua '
             local upstream = require "ngx.upstream"
             local ok, err = upstream.add_upstream_peer("foo", "127.0.0.10", 1, 1, 1, false)
-            if not ok then
+            if err then
               ngx.say(err)
             else
               local srvs, err = upstream.get_servers("foo")
