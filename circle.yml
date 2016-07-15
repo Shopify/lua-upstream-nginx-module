@@ -1,0 +1,46 @@
+# REQUIRES UBUNTU 14.04
+
+machine:
+  services:
+    - redis
+  environment:
+    LUAJIT_PREFIX: "/opt/luajit21"
+    LUAJIT_LIB: "$LUAJIT_PREFIX/lib"
+    LD_LIBRARY_PATH: "$LUAJIT_LIB:$LD_LIBRARY_PATH"
+    LUAJIT_INC: "$LUAJIT_PREFIX/include/luajit-2.1"
+    LUA_INCLUDE_DIR: "$LUAJIT_INC"
+    LUA_CMODULE_DIR: "/lib"
+    JOBS: "3"
+    NGX_BUILD_JOBS: "$JOBS"
+    NGINX_VERSION: "1.9.15"
+    CC: "gcc"
+    NGX_BUILD_CC: "$CC"
+
+dependencies:
+  pre:
+    - sudo apt-get install -y axel cpanminus libtest-base-perl libtext-diff-perl liburi-perl libwww-perl libtest-longstring-perl liblist-moreutils-perl
+  override:
+    - echo $HOME
+    - if [ ! -d download-cache ]; then mkdir download-cache; fi
+    - if [ ! -f download-cache/ngx_http_redis-0.3.7.tar.gz ]; then wget -O download-cache/ngx_http_redis-0.3.7.tar.gz http://people.freebsd.org/~osa/ngx_http_redis-0.3.7.tar.gz; fi
+    - mkdir -p ~/work/nginx && tar -xf download-cache/ngx_http_redis-0.3.7.tar.gz -C ~/work/nginx
+    - git clone https://github.com/openresty/nginx-devel-utils.git
+    - git clone https://github.com/openresty/openresty.git ../openresty
+    - git clone https://github.com/openresty/no-pool-nginx.git ../no-pool-nginx
+    - git clone https://github.com/simpl/ngx_devel_kit.git ../ndk-nginx-module
+    - git clone https://github.com/openresty/test-nginx.git
+    - git clone -b v2.1-agentzh https://github.com/openresty/luajit2.git
+    - git clone https://github.com/openresty/lua-nginx-module.git ../lua-nginx-module
+    - git clone https://github.com/openresty/nginx-eval-module.git ../eval-nginx-module
+    - git clone https://github.com/openresty/echo-nginx-module.git ../echo-nginx-module
+    - git clone https://github.com/openresty/set-misc-nginx-module.git ../set-misc-nginx-module
+    - git clone https://github.com/openresty/openresty.git ../ngx_openresty
+
+test:
+  override:
+    - cd luajit2 && make -j$JOBS CCDEBUG=-g Q= PREFIX=$LUAJIT_PREFIX CC=$CC XCFLAGS='-DLUA_USE_APICHECK -DLUA_USE_ASSERT' && sudo make install PREFIX=$LUAJIT_PREFIX
+    - cd test-nginx && sudo cpanm .
+    - PATH="$(pwd)/work/nginx/sbin:$(pwd)/nginx-devel-utils:$PATH" sh util/build.sh $NGINX_VERSION
+    - PATH="$(pwd)/work/nginx/sbin:$(pwd)/nginx-devel-utils:$PATH" nginx -V
+    - ldd $(pwd)/work/nginx/sbin/nginx | grep luajit
+    - PATH="$(pwd)/work/nginx/sbin:$(pwd)/nginx-devel-utils:$PATH" prove -r t
