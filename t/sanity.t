@@ -660,7 +660,7 @@ nil
     location /t {
         content_by_lua '
             local upstream = require "ngx.upstream"
-            local ok, err = upstream.add_upstream_peer("foo", "127.0.0.1:8080", 1, 1, 1, false)
+            local ok, err = upstream.add_upstream_peer("foo", "127.0.0.10", 1, 1, 1, false)
             if not ok then
               ngx.say(err)
             else
@@ -696,7 +696,7 @@ nil
 --- response_body
 upstream foo:
     addr = 127.0.0.2:80, weight = 1, fail_timeout = 10, name = 127.0.0.2, max_fails = 1
-    addr = 127.0.0.1:8080, weight = 1, fail_timeout = 1, name = 127.0.0.1:8080, max_fails = 1
+    addr = 127.0.0.10:80, weight = 1, fail_timeout = 1, name = 127.0.0.10, max_fails = 1
 done
 --- no_error_log
 [error]
