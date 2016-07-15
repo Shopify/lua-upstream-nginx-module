@@ -695,7 +695,7 @@ nil
 --- response_body
 upstream foo:
     addr = 127.0.0.2:80, weight = 1, fail_timeout = 10, name = 127.0.0.2, max_fails = 1
-    addr = 127.0.0.1:8080, weight = 1, fail_timeout = 10, name = 127.0.0.1:8080, max_fails = 1
+    addr = 127.0.0.1:8080, weight = 1, fail_timeout = 1, name = 127.0.0.1:8080, max_fails = 1
 done
 --- no_error_log
 [error]
