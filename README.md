@@ -12,7 +12,7 @@ Table of Contents
 * [Functions](#functions)
     * [get_upstreams](#get_upstreams)
     * [get_servers](#get_servers)
-    * [add_server_to_upstream](#add_server_to_upstream)
+    * [add_peer](#add_peer)
     * [remove_server_from_upstream](#remove_server_from_upstream)
     * [get_primary_peers](#get_primary_peers)
     * [get_backup_peers](#get_backup_peers)
@@ -128,9 +128,9 @@ The return value is an array-like Lua table. Each table entry is a hash-like Lua
 
 [Back to TOC](#table-of-contents)
 
-add_server_to_upstream
+add_peer
 -----------
-`syntax: ok, err = upstream.add_server_to_upstream(upstream_name, ip:port, weight, max_fails, fail_timeout)`
+`syntax: ok, err = upstream.add_peer(upstream_name, ip:port, weight, max_fails, fail_timeout)`
 
 The return values are a boolean denoting the success of the operation and an associated error if one occurs.
 

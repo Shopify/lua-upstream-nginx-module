@@ -660,7 +660,7 @@ nil
     location /t {
         content_by_lua '
             local upstream = require "ngx.upstream"
-            local ok, err = upstream.add_server_to_upstream("foo", "127.0.0.1:8080", 1, 1, 1, false)
+            local ok, err = upstream.add_peer("foo", "127.0.0.1:8080", 1, 1, 1, false)
             if not ok then
               ngx.say(err)
             else
