@@ -645,7 +645,7 @@ ngx_http_lua_upstream_find_upstream(lua_State *L, ngx_str_t *host)
 }
 
 static ngx_http_upstream_server_t*
-ngx_http_lua_upstream_find_server(ngx_http_upstream_srv_conf_t * us, ngx_url_t u)
+ngx_http_lua_upstream_find_server(ngx_http_upstream_srv_conf_t * us, ngx_url_t * u)
 {
     ngx_uint_t                 i, j;
     size_t                     len;
