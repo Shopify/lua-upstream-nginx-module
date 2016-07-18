@@ -151,16 +151,22 @@ ngx_http_lua_upstream_get_upstreams(lua_State * L)
 static int
 ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
 {
-    ngx_str_t                    host;
-    ngx_http_upstream_server_t   *us;
-    ngx_http_upstream_srv_conf_t *uscf;
-    ngx_url_t                    u = { 0 };
     ngx_http_request_t           *r;
+
+    ngx_http_upstream_srv_conf_t *uscf;
+    ngx_http_upstream_server_t   *us;
+
+    ngx_http_upstream_rr_peers_t *peers;
+    ngx_http_upstream_rr_peer_t  *peer, *last;
+
+    u_char                       url;
+
+    ngx_url_t                    upstream;
+    ngx_str_t                    host;
     ngx_int_t                    weight = 1;
     ngx_int_t                    max_fails = 1;
-    ngx_uint_t                   backup = 0;
     time_t                       fail_timeout = 10;
-    u_char                       *p;
+    ngx_uint_t                   backup = 0;
 
     if ((lua_gettop(L) < 2) || (lua_gettop(L) > 6)) {
         /*
@@ -172,14 +178,14 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
     r = ngx_http_lua_get_request(L);
     if (r == NULL) {
         lua_pushnil(L);
-        lua_pushliteral(L, "get request error \n");
+        lua_pushliteral(L, "could not retrieve request\n");
         return 2;
     }
 
     host.data = (u_char *) luaL_checklstring(L, 1, &host.len);
 
-    p = (u_char *) luaL_checklstring(L, 2, &u.url.len);
-    u.default_port = 80;
+    url = (u_char *) luaL_checklstring(L, 2, &upstream.url.len);
+    upstream.default_port = 80;
 
     if (lua_gettop(L) >= 3) {
       weight = (ngx_int_t) luaL_checkint(L, 3);
@@ -208,40 +214,56 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
         return 2;
     }
 
-    u.url.data = ngx_pcalloc(uscf->servers->pool, u.url.len+1);
-    ngx_memcpy(u.url.data, p, u.url.len);
+    peers = uscf->peer.data;
 
-    if (ngx_http_lua_upstream_find_server(uscf, &u) != NULL) {
-        lua_pushnil(L);
-        lua_pushliteral(L, "server already exists\n");
-        return 2;
-    } else {
-        // validate URL
-        if (ngx_parse_url(uscf->servers->pool, &u) != NGX_OK) {
-            if (u.err) {
-                lua_pushnil(L);
-                lua_pushliteral(L, "url parser error\n");
-                return 2;
-            }
-        }
-
-        us = ngx_array_push(uscf->servers);
-        if (us == NULL) {
+    for (peer = peers->peer, last = peer; peer; peer = peer->next){
+        if (url.len == peer->name.len && ngx_strcmp(url.data, peer->name.data, peer->name.len) == 0) {
             lua_pushnil(L);
-            lua_pushliteral(L, "could not append server to upstream\n");
+            lua_pushliteral(L, "server already exists\n");
             return 2;
         }
-
-        ngx_memzero(us, sizeof(ngx_http_upstream_server_t));
-
-        us->name = u.url;
-        us->addrs = u.addrs;
-        us->naddrs = u.naddrs;
-        us->weight = weight;
-        us->max_fails = max_fails;
-        us->fail_timeout = fail_timeout;
-        us->backup = backup;
+      last = peer;
     }
+
+    upstream.url.data = ngx_pcalloc(r->pool, upstream.url.len + 1);
+    ngx_memcpy(upstream.url.data, url, upstream.url.len);
+
+    // validate URL
+    if (ngx_parse_url(r->pool, &upstream) != NGX_OK) {
+        if (u.err) {
+            lua_pushnil(L);
+            lua_pushliteral(L, "url parser error\n");
+            return 2;
+        }
+    }
+
+    last->next = ngx_pcalloc();
+
+    if (last->next == NULL) {
+        lua_pushnil(L);
+        lua_pushliteral(L, "failed to allocate memory\n");
+        return 2;
+    }
+
+    last->next->name = upstream.url;
+    last->next->server = upstream.url;
+    last->next->sockaddr = upstream.addrs[0].sockaddr;
+    last->next->socklen = upstream.addrs[0].socklen;
+
+    last->next->weight = weight;
+    last->next->effective_weight = weight;
+    last->next->current_weight = weight;
+
+    last->next->max_fails = max_fails;
+
+    last->next->fail_timeout = fail_timeout;
+
+    last->next->backup = backup;
+
+    peers->number++;
+    peers->total_weight += last->next->weight;
+    peers->single = (peers->number == 1);
+    peers->weighted = (peers->total_weight != peers->number);
 
     lua_pushboolean(L, 1);
     return 1;
