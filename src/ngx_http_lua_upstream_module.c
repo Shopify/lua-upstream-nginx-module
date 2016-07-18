@@ -159,7 +159,7 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
     ngx_http_upstream_rr_peers_t *peers;
     ngx_http_upstream_rr_peer_t  *peer, *last;
 
-    u_char                       url;
+    u_char                       *url;
 
     ngx_url_t                    upstream;
     ngx_str_t                    host;
