@@ -206,7 +206,7 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
     }
 
 #if (NGX_DEBUG)
-    ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "%s %s params: %s,%s,%d,%d,%d,%d\n", __FILE__, __FUNCTION__, host.data, p, weight, max_fails, fail_timeout, backup);
+    ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "%s %s params: %s,%s,%d,%d,%d,%d\n", __FILE__, __FUNCTION__, host.data, url, weight, max_fails, fail_timeout, backup);
 #endif
 
     uscf = ngx_http_lua_upstream_find_upstream(L, &host);
