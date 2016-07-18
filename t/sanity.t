@@ -666,8 +666,8 @@ nil
               ngx.say(err)
             else
               local peers, err = upstream.get_primary_peers("foo")
-              if not srvs then
-                  ngx.say("failed to get servers in upstream foo")
+              if not peers then
+                  ngx.say("failed to get servers in upstream foo: " .. err)
               else
                 ngx.say(json.encode(peers))
               end
