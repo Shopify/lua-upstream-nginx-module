@@ -33,7 +33,7 @@ static int ngx_http_lua_get_peer(lua_State *L,
 static ngx_http_upstream_srv_conf_t *
     ngx_http_lua_upstream_find_upstream(lua_State *L, ngx_str_t *host);
 static ngx_http_upstream_server_t*
-    ngx_http_lua_upstream_find_server(ngx_http_upstream_srv_conf_t * us, ngx_url_t u);
+    ngx_http_lua_upstream_find_server(ngx_http_upstream_srv_conf_t * us, ngx_url_t * u);
 static ngx_http_upstream_rr_peer_t *
     ngx_http_lua_upstream_lookup_peer(lua_State *L);
 static int ngx_http_lua_upstream_set_peer_down(lua_State * L);
