@@ -154,7 +154,7 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
     ngx_str_t                    host;
     ngx_http_upstream_server_t   *us;
     ngx_http_upstream_srv_conf_t *uscf;
-    ngx_url_t                    u;
+    ngx_url_t                    u = { 0 };
     ngx_http_request_t           *r;
     ngx_int_t                    weight = 1;
     ngx_int_t                    max_fails = 1;
@@ -177,8 +177,6 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
     }
 
     host.data = (u_char *) luaL_checklstring(L, 1, &host.len);
-
-    ngx_memzero(&u, sizeof(ngx_url_t));
 
     p = (u_char *) luaL_checklstring(L, 2, &u.url.len);
     u.default_port = 80;
