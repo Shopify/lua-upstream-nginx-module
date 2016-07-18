@@ -184,6 +184,8 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
 
     host.data = (u_char *) luaL_checklstring(L, 1, &host.len);
 
+    ngx_memzero(&upstream, sizeof(ngx_url_t));
+
     url = (u_char *) luaL_checklstring(L, 2, &upstream.url.len);
     upstream.default_port = 80;
 
