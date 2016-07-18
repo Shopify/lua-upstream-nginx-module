@@ -130,7 +130,7 @@ The return value is an array-like Lua table. Each table entry is a hash-like Lua
 
 add_upstream_peer
 -----------
-`syntax: ok, err = upstream.add_upstream_peer(upstream_name, ip:port, weight, max_fails, fail_timeout)`
+`syntax: ok, err = upstream.add_upstream_peer(upstream_name, ip:port, optional weight = 1, optional max_fails = 1, optional fail_timeout = 10, optional backup = false)`
 
 The return values are a boolean denoting the success of the operation and an associated error if one occurs.
 

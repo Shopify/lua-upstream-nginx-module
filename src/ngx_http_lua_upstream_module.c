@@ -156,16 +156,16 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
     ngx_http_upstream_srv_conf_t *uscf;
     ngx_url_t                    u;
     ngx_http_request_t           *r;
-    ngx_int_t                    weight, max_fails;
-    ngx_uint_t                   backup;
-    time_t                       fail_timeout;
+    ngx_int_t                    weight, max_fails = 1, 1;
+    ngx_uint_t                   backup = false;
+    time_t                       fail_timeout = 10;
     u_char                       *p;
 
-    if (lua_gettop(L) != 6) {
+    if ((lua_gettop(L) < 2) || (lua_gettop(L) > 6)) {
         /*
         * "upstream name", "host:port", "weight", "max_fails", "fail_timeout", "backup"
         */
-        return luaL_error(L, "exactly 6 arguments expected");
+        return luaL_error(L, "at least 2 arguments are required and as many as 6 are allowed");
     }
 
     r = ngx_http_lua_get_request(L);
@@ -177,14 +177,27 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
 
     host.data = (u_char *) luaL_checklstring(L, 1, &host.len);
 
-    ngx_memzero(&u, sizeof(ngx_url_t));
+    ngx_url_t u = { 0 };
+
     p = (u_char *) luaL_checklstring(L, 2, &u.url.len);
     u.default_port = 80;
 
-    weight = (ngx_int_t) luaL_checkint(L, 3);
-    max_fails = (ngx_int_t) luaL_checkint(L, 4);
-    fail_timeout = (time_t) luaL_checklong(L, 5);
-    backup = lua_toboolean(L, 6);
+    if (lua_gettop(L) >= 3) {
+      weight = (ngx_int_t) luaL_checkint(L, 3);
+    }
+
+    if (lua_gettop(L) >= 4) {
+      max_fails = (ngx_int_t) luaL_checkint(L, 4);
+    }
+
+    if (lua_gettop(L) >= 5) {
+      fail_timeout = (time_t) luaL_checklong(L, 5);
+    }
+
+    if (lua_gettop(L) >= 6) {
+      backup = lua_toboolean(L, 6);
+    }
+
 #if (NGX_DEBUG)
     ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "%s %s params: %s,%s,%d,%d,%d,%d\n", __FILE__, __FUNCTION__, host.data, p, weight, max_fails, fail_timeout, backup);
 #endif
