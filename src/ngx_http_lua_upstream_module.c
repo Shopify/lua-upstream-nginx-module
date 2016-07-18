@@ -151,21 +151,21 @@ ngx_http_lua_upstream_get_upstreams(lua_State * L)
 static int
 ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
 {
-    ngx_http_request_t           *r;
+    ngx_http_request_t            *r;
 
-    ngx_http_upstream_srv_conf_t *uscf;
+    ngx_http_upstream_srv_conf_t  *us;
 
-    ngx_http_upstream_rr_peers_t *peers;
-    ngx_http_upstream_rr_peer_t  *peer, *last;
+    ngx_http_upstream_rr_peers_t  *peers;
+    ngx_http_upstream_rr_peer_t   *peer, *last;
 
-    u_char                       *url;
+    u_char                        *url;
 
-    ngx_url_t                    upstream;
-    ngx_str_t                    host;
-    ngx_int_t                    weight = 1;
-    ngx_int_t                    max_fails = 1;
-    time_t                       fail_timeout = 10;
-    ngx_uint_t                   backup = 0;
+    ngx_url_t                     upstream;
+    ngx_str_t                     host;
+    ngx_int_t                     weight = 1;
+    ngx_int_t                     max_fails = 1;
+    time_t                        fail_timeout = 10;
+    ngx_uint_t                    backup = 0;
 
     if ((lua_gettop(L) < 2) || (lua_gettop(L) > 6)) {
         /*
@@ -208,17 +208,17 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
     ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "%s %s params: %s,%s,%d,%d,%d,%d\n", __FILE__, __FUNCTION__, host.data, url, weight, max_fails, fail_timeout, backup);
 #endif
 
-    uscf = ngx_http_lua_upstream_find_upstream(L, &host);
-    if (uscf == NULL) {
+    us = ngx_http_lua_upstream_find_upstream(L, &host);
+    if (us == NULL) {
         lua_pushnil(L);
         lua_pushliteral(L, "upstream not found\n");
         return 2;
     }
 
-    peers = uscf->peer.data;
+    peers = us->peer.data;
 
     for (peer = peers->peer, last = peer; peer; peer = peer->next){
-        if (url.len == peer->name.len && ngx_strcmp(url.data, peer->name.data, peer->name.len) == 0) {
+        if (len(url) == peer->name.len && ngx_strncmp(url, peer->name.data, peer->name.len) == 0) {
             lua_pushnil(L);
             lua_pushliteral(L, "server already exists\n");
             return 2;
@@ -231,14 +231,14 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
 
     // validate URL
     if (ngx_parse_url(r->pool, &upstream) != NGX_OK) {
-        if (u.err) {
+        if (upstream.err) {
             lua_pushnil(L);
             lua_pushliteral(L, "url parser error\n");
             return 2;
         }
     }
 
-    last->next = ngx_pcalloc();
+    last->next = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_rr_peer_t));
 
     if (last->next == NULL) {
         lua_pushnil(L);
