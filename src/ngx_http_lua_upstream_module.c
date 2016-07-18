@@ -32,8 +32,6 @@ static int ngx_http_lua_get_peer(lua_State *L,
     ngx_http_upstream_rr_peer_t *peer, ngx_uint_t id);
 static ngx_http_upstream_srv_conf_t *
     ngx_http_lua_upstream_find_upstream(lua_State *L, ngx_str_t *host);
-static ngx_http_upstream_server_t*
-    ngx_http_lua_upstream_find_server(ngx_http_upstream_srv_conf_t * us, ngx_url_t * u);
 static ngx_http_upstream_rr_peer_t *
     ngx_http_lua_upstream_lookup_peer(lua_State *L);
 static int ngx_http_lua_upstream_set_peer_down(lua_State * L);
@@ -672,33 +670,6 @@ ngx_http_lua_upstream_find_upstream(lua_State *L, ngx_str_t *host)
                 && ngx_memcmp(uscf->host.data, host->data, len) == 0)
             {
                 return uscf;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-static ngx_http_upstream_server_t*
-ngx_http_lua_upstream_find_server(ngx_http_upstream_srv_conf_t * us, ngx_url_t * u)
-{
-    ngx_uint_t                 i, j;
-    size_t                     len;
-    ngx_http_upstream_server_t *server = NULL;
-
-    if (us->servers == NULL || us->servers->nelts == 0) {
-        return NULL;
-    }
-
-    server = us->servers->elts;
-
-    for (i = 0; i < us->servers->nelts; ++i) {
-        for (j = 0; j < server[i].naddrs; ++j) {
-            len = server[i].addrs[j].name.len;
-
-            if (len == u.url.len
-                  && ngx_memcmp(u.url.data, server[i].addrs[j].name.data, u.url.len) == 0) {
-                      return &server[i];
             }
         }
     }
