@@ -154,7 +154,6 @@ ngx_http_lua_upstream_add_upstream_peer(lua_State * L)
     ngx_http_request_t           *r;
 
     ngx_http_upstream_srv_conf_t *uscf;
-    ngx_http_upstream_server_t   *us;
 
     ngx_http_upstream_rr_peers_t *peers;
     ngx_http_upstream_rr_peer_t  *peer, *last;
