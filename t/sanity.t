@@ -659,44 +659,24 @@ nil
 --- config
     location /t {
         content_by_lua '
+            local ljson = require "ljson"
             local upstream = require "ngx.upstream"
-            local ok, err = upstream.add_upstream_peer("foo", "127.0.0.10", 1, 1, 1, false)
+            local ok, err = upstream.add_upstream_peer("foo", "127.0.0.10")
             if err then
               ngx.say(err)
             else
-              local srvs, err = upstream.get_servers("foo")
+              local peers, err = upstream.get_primary_peers("foo")
               if not srvs then
                   ngx.say("failed to get servers in upstream foo")
               else
-                ngx.say("upstream foo:")
-                for _, srv in ipairs(srvs) do
-                  local first = true
-                  for k, v in pairs(srv) do
-                    if first then
-                      first = false
-                      ngx.print("    ")
-                    else
-                      ngx.print(", ")
-                    end
-                    if type(v) == "table" then
-                      ngx.print(k, " = {", concat(v, ", "), "}")
-                    else
-                      ngx.print(k, " = ", v)
-                    end
-                  end
-                  ngx.print("\\n")
-                end
+                ngx.say(json.encode(peers))
               end
-              ngx.say("done")
             end
         ';
     }
 --- request
     GET /t
 --- response_body
-upstream foo:
-    addr = 127.0.0.2:80, weight = 1, fail_timeout = 10, name = 127.0.0.2, max_fails = 1
-    addr = 127.0.0.10:80, weight = 1, fail_timeout = 1, name = 127.0.0.10, max_fails = 1
-done
+[{"addr": "127.0.0.2:80", "weight": 1, "fail_timeout": 10, "name": "127.0.0.2", "max_fails": 1}, {"addr": "127.0.0.10:80", "weight": 1, "fail_timeout": 1, "name": "127.0.0.10", "max_fails": 1}]
 --- no_error_log
 [error]
