@@ -59,3 +59,4 @@ analyze
 addr2line
 *.plist
 Makefile
+/.vagrant

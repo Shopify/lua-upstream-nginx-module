@@ -18,9 +18,9 @@ machine:
 
 dependencies:
   pre:
-    - sudo apt-get install -y axel cpanminus libtest-base-perl libtext-diff-perl liburi-perl libwww-perl libtest-longstring-perl liblist-moreutils-perl
+    - sudo apt-get update
+    - sudo apt-get install -y axel build-essential cpanminus git-core libcurl4-openssl-dev libpcre3-dev libtest-base-perl libtext-diff-perl liburi-perl libwww-perl libtest-longstring-perl liblist-moreutils-perl
   override:
-    - echo $HOME
     - if [ ! -d download-cache ]; then mkdir download-cache; fi
     - if [ ! -f download-cache/ngx_http_redis-0.3.7.tar.gz ]; then wget -O download-cache/ngx_http_redis-0.3.7.tar.gz http://people.freebsd.org/~osa/ngx_http_redis-0.3.7.tar.gz; fi
     - mkdir -p ~/work/nginx && tar -xf download-cache/ngx_http_redis-0.3.7.tar.gz -C ~/work/nginx
@@ -35,11 +35,11 @@ dependencies:
     - git clone https://github.com/openresty/echo-nginx-module.git ../echo-nginx-module
     - git clone https://github.com/openresty/set-misc-nginx-module.git ../set-misc-nginx-module
     - git clone https://github.com/openresty/openresty.git ../ngx_openresty
+    - cd luajit2 && make -j$JOBS CCDEBUG=-g Q= PREFIX=$LUAJIT_PREFIX CC=$CC XCFLAGS='-DLUA_USE_APICHECK -DLUA_USE_ASSERT' && sudo make install PREFIX=$LUAJIT_PREFIX
+    - cd test-nginx && sudo cpanm .
 
 test:
   override:
-    - cd luajit2 && make -j$JOBS CCDEBUG=-g Q= PREFIX=$LUAJIT_PREFIX CC=$CC XCFLAGS='-DLUA_USE_APICHECK -DLUA_USE_ASSERT' && sudo make install PREFIX=$LUAJIT_PREFIX
-    - cd test-nginx && sudo cpanm .
     - PATH="$(pwd)/work/nginx/sbin:$(pwd)/nginx-devel-utils:$PATH" sh util/build.sh $NGINX_VERSION
     - PATH="$(pwd)/work/nginx/sbin:$(pwd)/nginx-devel-utils:$PATH" nginx -V
     - ldd $(pwd)/work/nginx/sbin/nginx | grep luajit
